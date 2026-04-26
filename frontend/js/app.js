@@ -5,11 +5,14 @@ import {
   getAllData,
   getDashboardStats,
   issuePass,
+  upsertPasskitSettings,
 } from "./api.js";
 import {
   fillDashboard,
+  readPasskitSettingsFromForm,
   renderCustomerOptions,
   renderCustomers,
+  renderPasskitSettings,
   renderTemplateOptions,
   showPassJson,
   updatePreview,
@@ -17,7 +20,15 @@ import {
 
 const navItems = document.querySelectorAll(".nav-item");
 const views = document.querySelectorAll(".view");
-let currentData = { customers: [], templates: [], passes: [], transactions: [] };
+const DEFAULT_PASSKIT_SETTINGS = {
+  passTypeIdentifier: "pass.el.promillo",
+  teamIdentifier: "ABCDE12345",
+  organizationName: "Egli+Vitali AG",
+  logoText: "EL Passkit",
+  description: "Digitale Kundenkarte",
+  contactEmail: "info@example.com",
+};
+let currentData = { customers: [], templates: [], passes: [], transactions: [], passkitSettings: null };
 
 function setupNavigation() {
   navItems.forEach((button) => {
@@ -42,6 +53,7 @@ async function refreshUi() {
   renderCustomers(currentData.customers);
   renderTemplateOptions(currentData.templates);
   renderCustomerOptions(currentData.customers);
+  renderPasskitSettings(currentData.passkitSettings || DEFAULT_PASSKIT_SETTINGS);
 
   const selectedTemplateId = document.getElementById("templatePreviewSelect").value || currentData.templates[0]?.id;
   const previewTemplate =
@@ -82,9 +94,20 @@ function setupForms() {
   document.getElementById("issueForm").addEventListener("submit", (event) => {
     event.preventDefault();
     handleAction(async () => {
-      await issuePass(readForm("issueForm"));
+      const payload = readForm("issueForm");
+      const settings = readPasskitSettingsFromForm() || DEFAULT_PASSKIT_SETTINGS;
+      await issuePass({ ...payload, passTypeIdentifier: settings.passTypeIdentifier });
       event.target.reset();
       await refreshUi();
+    });
+  });
+
+  document.getElementById("passkitSettingsForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    handleAction(async () => {
+      await upsertPasskitSettings(readPasskitSettingsFromForm());
+      await refreshUi();
+      alert("Passkit-Parameter gespeichert.");
     });
   });
 

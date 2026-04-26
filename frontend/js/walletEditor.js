@@ -1,12 +1,14 @@
 export function buildPassJson(formData) {
+  const settings = formData.settings || {};
+
   return {
     formatVersion: 1,
-    passTypeIdentifier: "pass.ch.eglivitali.customer",
+    passTypeIdentifier: settings.passTypeIdentifier || "pass.el.promillo",
     serialNumber: formData.customerNumber,
-    teamIdentifier: "ABCDE12345",
-    organizationName: "Egli+Vitali AG",
-    description: "Digitale Kundenkarte",
-    logoText: "Egli+Vitali AG",
+    teamIdentifier: settings.teamIdentifier || "ABCDE12345",
+    organizationName: settings.organizationName || "Egli+Vitali AG",
+    description: settings.description || "Digitale Kundenkarte",
+    logoText: settings.logoText || "EL Passkit",
     foregroundColor: hexToRgb(formData.foregroundColor),
     backgroundColor: hexToRgb(formData.backgroundColor),
     labelColor: hexToRgb(formData.labelColor),
@@ -14,7 +16,7 @@ export function buildPassJson(formData) {
       primaryFields: [{ key: "name", label: "Kunde", value: formData.customerName }],
       secondaryFields: [{ key: "points", label: "Punkte", value: String(formData.points) }],
       auxiliaryFields: [{ key: "status", label: "Status", value: formData.status }],
-      backFields: [{ key: "contact", label: "Kontakt", value: "info@eglivitali.ch" }],
+      backFields: [{ key: "contact", label: "Kontakt", value: settings.contactEmail || "info@example.com" }],
     },
     barcodes: [
       {
