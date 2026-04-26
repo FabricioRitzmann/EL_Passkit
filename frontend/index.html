@@ -18,101 +18,40 @@
         <h1>EL Passkit</h1>
         <nav>
           <button class="nav-item active" data-view="dashboard">Dashboard</button>
-          <button class="nav-item" data-view="editor">Karten-Editor</button>
+          <button class="nav-item" data-view="editor">Pass-Vorschau</button>
           <button class="nav-item" data-view="customers">Kunden</button>
+          <button class="nav-item" data-view="operations">Vorlagen & Ausgabe</button>
         </nav>
       </aside>
 
       <main class="content">
         <header class="topbar glass">
-          <p class="eyebrow">Wallet Management</p>
-          <h2>Apple-ähnlicher Karten-Editor</h2>
-          <button class="primary-btn">+ Neue Karte</button>
+          <div>
+            <p class="eyebrow">Wallet Management</p>
+            <h2>Passkit-Plattform auf EL-Promillo-Logik</h2>
+          </div>
         </header>
 
         <section id="dashboard" class="view active">
           <div class="stats-grid">
-            <article class="stat-card glass">
-              <p>Aktive Karten</p>
-              <h3 id="activeCards">0</h3>
-            </article>
-            <article class="stat-card glass">
-              <p>Letzte Downloads</p>
-              <h3 id="lastDownloads">0</h3>
-            </article>
-            <article class="stat-card glass">
-              <p>Ablaufend in 30 Tagen</p>
-              <h3 id="expiringSoon">0</h3>
-            </article>
+            <article class="stat-card glass"><p>Aktive Karten</p><h3 id="activeCards">0</h3></article>
+            <article class="stat-card glass"><p>Letzte Downloads</p><h3 id="lastDownloads">0</h3></article>
+            <article class="stat-card glass"><p>Ablaufend in 30 Tagen</p><h3 id="expiringSoon">0</h3></article>
+            <article class="stat-card glass"><p>Kunden</p><h3 id="customerCount">0</h3></article>
           </div>
         </section>
 
         <section id="editor" class="view">
           <div class="editor-grid">
-            <form class="editor-panel glass" id="walletForm">
-              <h3>Karteneinstellungen</h3>
-
-              <label>
-                Kartentyp
-                <select name="passType">
-                  <option value="storeCard">Kundenkarte</option>
-                  <option value="coupon">Gutschein</option>
-                  <option value="eventTicket">Eventticket</option>
-                  <option value="generic">Generische Karte</option>
-                </select>
-              </label>
-
-              <label>
-                Name
-                <input type="text" name="customerName" value="Max Muster" />
-              </label>
-
-              <label>
-                Kundennummer
-                <input type="text" name="customerNumber" value="EV-000123" />
-              </label>
-
-              <label>
-                Punkte
-                <input type="number" name="points" value="250" min="0" />
-              </label>
-
-              <label>
-                Status
-                <input type="text" name="status" value="Gold" />
-              </label>
-
-              <label>
-                Hintergrundfarbe
-                <input type="color" name="backgroundColor" value="#1e1e1e" />
-              </label>
-
-              <label>
-                Textfarbe
-                <input type="color" name="foregroundColor" value="#ffffff" />
-              </label>
-
-              <label>
-                Label-Farbe
-                <input type="color" name="labelColor" value="#b4b4b4" />
-              </label>
-
-              <label>
-                Barcode
-                <select name="barcodeFormat">
-                  <option value="PKBarcodeFormatQR">QR-Code</option>
-                  <option value="PKBarcodeFormatCode128">Code128</option>
-                  <option value="PKBarcodeFormatPDF417">PDF417</option>
-                  <option value="PKBarcodeFormatAztec">Aztec</option>
-                </select>
-              </label>
-            </form>
-
             <aside class="preview-panel glass">
               <h3>Live-Vorschau</h3>
+              <label>
+                Vorlage für Vorschau
+                <select id="templatePreviewSelect"></select>
+              </label>
               <div class="pass-preview" id="passPreview">
                 <div class="pass-header">
-                  <p class="logo-text">Egli+Vitali AG</p>
+                  <p class="logo-text">EL Passkit</p>
                   <span class="status-badge" id="previewStatus">Gold</span>
                 </div>
                 <div class="pass-main">
@@ -137,12 +76,69 @@
         </section>
 
         <section id="customers" class="view">
-          <article class="glass simple-card">
-            <h3>Kundenverwaltung (MVP)</h3>
-            <p>
-              Erfasse Kundendaten, generiere eine Karte und sende einen Download-Link für Apple Wallet.
-            </p>
-          </article>
+          <div class="editor-grid">
+            <form class="editor-panel glass" id="customerForm">
+              <h3>Neuen Kunden erfassen</h3>
+              <label>Vorname <input type="text" name="firstName" required /></label>
+              <label>Nachname <input type="text" name="lastName" required /></label>
+              <label>E-Mail <input type="email" name="email" /></label>
+              <label>Kundennummer <input type="text" name="customerNumber" required /></label>
+              <label>Punkte <input type="number" name="points" value="0" min="0" /></label>
+              <label>Status <input type="text" name="status" value="Basic" /></label>
+              <button class="primary-btn" type="submit">Kunde speichern</button>
+            </form>
+
+            <article class="glass simple-card">
+              <h3>Kunden & Punktebuchungen</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nr.</th><th>Name</th><th>E-Mail</th><th>Punkte</th><th>Status</th><th>Aktion</th>
+                  </tr>
+                </thead>
+                <tbody id="customersTableBody"></tbody>
+              </table>
+            </article>
+          </div>
+        </section>
+
+        <section id="operations" class="view">
+          <div class="operations-grid">
+            <form class="editor-panel glass" id="templateForm">
+              <h3>Vorlage erstellen</h3>
+              <label>Name <input type="text" name="name" required /></label>
+              <label>
+                Kartentyp
+                <select name="passType">
+                  <option value="storeCard">Kundenkarte</option>
+                  <option value="coupon">Gutschein</option>
+                  <option value="eventTicket">Eventticket</option>
+                  <option value="generic">Generisch</option>
+                </select>
+              </label>
+              <label>Hintergrundfarbe <input type="color" name="backgroundColor" value="#1e1e1e" /></label>
+              <label>Textfarbe <input type="color" name="foregroundColor" value="#ffffff" /></label>
+              <label>Label-Farbe <input type="color" name="labelColor" value="#b4b4b4" /></label>
+              <label>
+                Barcode
+                <select name="barcodeFormat">
+                  <option value="PKBarcodeFormatQR">QR-Code</option>
+                  <option value="PKBarcodeFormatCode128">Code128</option>
+                  <option value="PKBarcodeFormatPDF417">PDF417</option>
+                </select>
+              </label>
+              <button class="primary-btn" type="submit">Vorlage speichern</button>
+            </form>
+
+            <form class="editor-panel glass" id="issueForm">
+              <h3>Pass ausgeben</h3>
+              <label>Kunde <select id="issueCustomerId" name="customerId"></select></label>
+              <label>Vorlage <select id="issueTemplateId" name="templateId"></select></label>
+              <label>Seriennummer <input type="text" name="serialNumber" required /></label>
+              <label>Ablaufdatum <input type="date" name="expiresAt" /></label>
+              <button class="primary-btn" type="submit">Pass erzeugen</button>
+            </form>
+          </div>
         </section>
       </main>
     </div>
