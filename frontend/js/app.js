@@ -17,6 +17,7 @@ import {
 
 const navItems = document.querySelectorAll(".nav-item");
 const views = document.querySelectorAll(".view");
+let currentData = { customers: [], templates: [], passes: [], transactions: [] };
 
 function setupNavigation() {
   navItems.forEach((button) => {
@@ -34,39 +35,57 @@ function readForm(formId) {
   return Object.fromEntries(new FormData(form));
 }
 
-function refreshUi() {
-  const data = getAllData();
-  fillDashboard(getDashboardStats());
-  renderCustomers(data.customers);
-  renderTemplateOptions(data.templates);
-  renderCustomerOptions(data.customers);
+async function refreshUi() {
+  currentData = await getAllData();
 
-  const selectedTemplateId = document.getElementById("templatePreviewSelect").value || data.templates[0]?.id;
-  const previewTemplate = data.templates.find((template) => template.id === selectedTemplateId) || data.templates[0];
-  const previewCustomer = data.customers[0];
+  fillDashboard(getDashboardStats(currentData));
+  renderCustomers(currentData.customers);
+  renderTemplateOptions(currentData.templates);
+  renderCustomerOptions(currentData.customers);
+
+  const selectedTemplateId = document.getElementById("templatePreviewSelect").value || currentData.templates[0]?.id;
+  const previewTemplate =
+    currentData.templates.find((template) => template.id === selectedTemplateId) || currentData.templates[0];
+  const previewCustomer = currentData.customers[0];
   updatePreview(previewTemplate, previewCustomer);
+}
+
+async function handleAction(handler) {
+  try {
+    await handler();
+  } catch (error) {
+    console.error(error);
+    const message = error?.message || "Unbekannter Fehler";
+    alert(`Aktion fehlgeschlagen: ${message}`);
+  }
 }
 
 function setupForms() {
   document.getElementById("customerForm").addEventListener("submit", (event) => {
     event.preventDefault();
-    addCustomer(readForm("customerForm"));
-    event.target.reset();
-    refreshUi();
+    handleAction(async () => {
+      await addCustomer(readForm("customerForm"));
+      event.target.reset();
+      await refreshUi();
+    });
   });
 
   document.getElementById("templateForm").addEventListener("submit", (event) => {
     event.preventDefault();
-    addTemplate(readForm("templateForm"));
-    event.target.reset();
-    refreshUi();
+    handleAction(async () => {
+      await addTemplate(readForm("templateForm"));
+      event.target.reset();
+      await refreshUi();
+    });
   });
 
   document.getElementById("issueForm").addEventListener("submit", (event) => {
     event.preventDefault();
-    issuePass(readForm("issueForm"));
-    event.target.reset();
-    refreshUi();
+    handleAction(async () => {
+      await issuePass(readForm("issueForm"));
+      event.target.reset();
+      await refreshUi();
+    });
   });
 
   document.getElementById("customersTableBody").addEventListener("click", (event) => {
@@ -77,23 +96,23 @@ function setupForms() {
     const customerId = target.dataset.id;
     if (!action || !customerId) return;
 
-    const amount = action === "plus" ? 10 : -10;
-    bookPoints(customerId, amount, `Manuelle Buchung (${amount > 0 ? "+" : ""}${amount})`);
-    refreshUi();
+    handleAction(async () => {
+      const amount = action === "plus" ? 10 : -10;
+      await bookPoints(customerId, amount, `Manuelle Buchung (${amount > 0 ? "+" : ""}${amount})`);
+      await refreshUi();
+    });
   });
 
   document.getElementById("templatePreviewSelect").addEventListener("change", () => {
-    const data = getAllData();
     const templateId = document.getElementById("templatePreviewSelect").value;
-    const template = data.templates.find((entry) => entry.id === templateId) || data.templates[0];
-    updatePreview(template, data.customers[0]);
+    const template = currentData.templates.find((entry) => entry.id === templateId) || currentData.templates[0];
+    updatePreview(template, currentData.customers[0]);
   });
 
   document.getElementById("exportJson").addEventListener("click", () => {
-    const data = getAllData();
     const templateId = document.getElementById("templatePreviewSelect").value;
-    const template = data.templates.find((entry) => entry.id === templateId) || data.templates[0];
-    showPassJson(template, data.customers[0]);
+    const template = currentData.templates.find((entry) => entry.id === templateId) || currentData.templates[0];
+    showPassJson(template, currentData.customers[0]);
   });
 
   document.getElementById("closeJson").addEventListener("click", () => {
@@ -103,4 +122,4 @@ function setupForms() {
 
 setupNavigation();
 setupForms();
-refreshUi();
+handleAction(refreshUi);
