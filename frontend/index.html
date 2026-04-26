@@ -138,6 +138,17 @@
               <label>Ablaufdatum <input type="date" name="expiresAt" /></label>
               <button class="primary-btn" type="submit">Pass erzeugen</button>
             </form>
+
+            <form class="editor-panel glass" id="passkitSettingsForm">
+              <h3>Passkit Richtlinien & Parameter</h3>
+              <label>Pass Type Identifier <input type="text" name="passTypeIdentifier" value="pass.el.promillo" required /></label>
+              <label>Team Identifier <input type="text" name="teamIdentifier" value="ABCDE12345" required /></label>
+              <label>Organisation <input type="text" name="organizationName" value="Egli+Vitali AG" required /></label>
+              <label>Logo Text <input type="text" name="logoText" value="EL Passkit" required /></label>
+              <label>Beschreibung <input type="text" name="description" value="Digitale Kundenkarte" required /></label>
+              <label>Kontakt E-Mail <input type="email" name="contactEmail" value="info@example.com" required /></label>
+              <button class="primary-btn" type="submit">Parameter speichern</button>
+            </form>
           </div>
         </section>
       </main>

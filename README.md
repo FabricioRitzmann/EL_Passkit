@@ -7,6 +7,7 @@ Apple-ähnlicher Wallet-Karten-Editor mit Supabase-orientierter Projektstruktur.
 - Kundenverwaltung mit Punkten und Status
 - Vorlagenverwaltung (Pass-Farben, Pass-Typ, Barcode-Typ)
 - Pass-Ausgabe mit Seriennummer und Ablaufdatum
+- Globale Passkit-Parameter (Pass Type Identifier, Team Identifier etc.) direkt im Frontend bearbeitbar
 - Supabase-gestützte Datenhaltung (Kunden, Vorlagen, Pässe, Punkte)
 - `pass.json`-Export für die aktuell gewählte Vorlage
 
@@ -19,6 +20,7 @@ Apple-ähnlicher Wallet-Karten-Editor mit Supabase-orientierter Projektstruktur.
 - `backend/supabase/migrations/2026-04-26_promillo_extension.sql`: Punkte- und Event-Erweiterung
 - `backend/supabase/functions/*`: Edge-Function-Stubs für Pass-Lifecycle
 - `backend/supabase/migrations/2026-04-26_storage_and_rls.sql`: Buckets + RLS Policies für Frontend-Zugriff
+- `backend/supabase/migrations/2026-04-26_passkit_settings.sql`: Tabelle + Policies für zentrale Passkit-Parameter
 
 ## Lokal starten
 

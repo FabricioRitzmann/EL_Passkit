@@ -68,6 +68,7 @@ export function updatePreview(template, customer) {
 }
 
 export function showPassJson(template, customer) {
+  const settings = readPasskitSettingsFromForm();
   const json = buildPassJson({
     passType: template.passType,
     customerName: `${customer.firstName} ${customer.lastName}`,
@@ -78,8 +79,37 @@ export function showPassJson(template, customer) {
     backgroundColor: template.backgroundColor,
     labelColor: template.labelColor,
     barcodeFormat: template.barcodeFormat,
+    settings,
   });
 
   document.getElementById("jsonOutput").textContent = JSON.stringify(json, null, 2);
   document.getElementById("jsonDialog").showModal();
+}
+
+export function renderPasskitSettings(settings) {
+  if (!settings) return;
+
+  const form = document.getElementById("passkitSettingsForm");
+  if (!form) return;
+
+  form.elements.passTypeIdentifier.value = settings.passTypeIdentifier;
+  form.elements.teamIdentifier.value = settings.teamIdentifier;
+  form.elements.organizationName.value = settings.organizationName;
+  form.elements.logoText.value = settings.logoText;
+  form.elements.description.value = settings.description;
+  form.elements.contactEmail.value = settings.contactEmail;
+}
+
+export function readPasskitSettingsFromForm() {
+  const form = document.getElementById("passkitSettingsForm");
+  if (!form) return null;
+
+  return {
+    passTypeIdentifier: form.elements.passTypeIdentifier.value,
+    teamIdentifier: form.elements.teamIdentifier.value,
+    organizationName: form.elements.organizationName.value,
+    logoText: form.elements.logoText.value,
+    description: form.elements.description.value,
+    contactEmail: form.elements.contactEmail.value,
+  };
 }
