@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wallet Karten-Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar glass">
+        <h1>EL Passkit</h1>
+        <nav>
+          <button class="nav-item active" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="editor">Karten-Editor</button>
+          <button class="nav-item" data-view="customers">Kunden</button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar glass">
+          <p class="eyebrow">Wallet Management</p>
+          <h2>Apple-ähnlicher Karten-Editor</h2>
+          <button class="primary-btn">+ Neue Karte</button>
+        </header>
+
+        <section id="dashboard" class="view active">
+          <div class="stats-grid">
+            <article class="stat-card glass">
+              <p>Aktive Karten</p>
+              <h3 id="activeCards">0</h3>
+            </article>
+            <article class="stat-card glass">
+              <p>Letzte Downloads</p>
+              <h3 id="lastDownloads">0</h3>
+            </article>
+            <article class="stat-card glass">
+              <p>Ablaufend in 30 Tagen</p>
+              <h3 id="expiringSoon">0</h3>
+            </article>
+          </div>
+        </section>
+
+        <section id="editor" class="view">
+          <div class="editor-grid">
+            <form class="editor-panel glass" id="walletForm">
+              <h3>Karteneinstellungen</h3>
+
+              <label>
+                Kartentyp
+                <select name="passType">
+                  <option value="storeCard">Kundenkarte</option>
+                  <option value="coupon">Gutschein</option>
+                  <option value="eventTicket">Eventticket</option>
+                  <option value="generic">Generische Karte</option>
+                </select>
+              </label>
+
+              <label>
+                Name
+                <input type="text" name="customerName" value="Max Muster" />
+              </label>
+
+              <label>
+                Kundennummer
+                <input type="text" name="customerNumber" value="EV-000123" />
+              </label>
+
+              <label>
+                Punkte
+                <input type="number" name="points" value="250" min="0" />
+              </label>
+
+              <label>
+                Status
+                <input type="text" name="status" value="Gold" />
+              </label>
+
+              <label>
+                Hintergrundfarbe
+                <input type="color" name="backgroundColor" value="#1e1e1e" />
+              </label>
+
+              <label>
+                Textfarbe
+                <input type="color" name="foregroundColor" value="#ffffff" />
+              </label>
+
+              <label>
+                Label-Farbe
+                <input type="color" name="labelColor" value="#b4b4b4" />
+              </label>
+
+              <label>
+                Barcode
+                <select name="barcodeFormat">
+                  <option value="PKBarcodeFormatQR">QR-Code</option>
+                  <option value="PKBarcodeFormatCode128">Code128</option>
+                  <option value="PKBarcodeFormatPDF417">PDF417</option>
+                  <option value="PKBarcodeFormatAztec">Aztec</option>
+                </select>
+              </label>
+            </form>
+
+            <aside class="preview-panel glass">
+              <h3>Live-Vorschau</h3>
+              <div class="pass-preview" id="passPreview">
+                <div class="pass-header">
+                  <p class="logo-text">Egli+Vitali AG</p>
+                  <span class="status-badge" id="previewStatus">Gold</span>
+                </div>
+                <div class="pass-main">
+                  <p class="label">Kunde</p>
+                  <h4 id="previewName">Max Muster</h4>
+                  <div class="split-row">
+                    <div>
+                      <p class="label">Kundennummer</p>
+                      <p id="previewCustomerNumber">EV-000123</p>
+                    </div>
+                    <div>
+                      <p class="label">Punkte</p>
+                      <p id="previewPoints">250</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="barcode">|||| |||| |||| ||||</div>
+              </div>
+              <button id="exportJson" class="secondary-btn">pass.json anzeigen</button>
+            </aside>
+          </div>
+        </section>
+
+        <section id="customers" class="view">
+          <article class="glass simple-card">
+            <h3>Kundenverwaltung (MVP)</h3>
+            <p>
+              Erfasse Kundendaten, generiere eine Karte und sende einen Download-Link für Apple Wallet.
+            </p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="jsonDialog">
+      <pre id="jsonOutput"></pre>
+      <button id="closeJson" class="secondary-btn">Schließen</button>
+    </dialog>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
