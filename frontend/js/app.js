@@ -1,66 +1,106 @@
-import { buildPassJson } from "./walletEditor.js";
-
-const state = {
-  cards: [
-    { status: "active", downloads: 23, expiresAt: "2026-05-10" },
-    { status: "active", downloads: 11, expiresAt: "2026-07-01" },
-    { status: "blocked", downloads: 3, expiresAt: "2026-04-29" },
-  ],
-};
+import {
+  addCustomer,
+  addTemplate,
+  bookPoints,
+  getAllData,
+  getDashboardStats,
+  issuePass,
+} from "./api.js";
+import {
+  fillDashboard,
+  renderCustomerOptions,
+  renderCustomers,
+  renderTemplateOptions,
+  showPassJson,
+  updatePreview,
+} from "./ui.js";
 
 const navItems = document.querySelectorAll(".nav-item");
 const views = document.querySelectorAll(".view");
-const form = document.getElementById("walletForm");
-const passPreview = document.getElementById("passPreview");
 
-navItems.forEach((button) => {
-  button.addEventListener("click", () => {
-    navItems.forEach((item) => item.classList.remove("active"));
-    views.forEach((view) => view.classList.remove("active"));
-
-    button.classList.add("active");
-    document.getElementById(button.dataset.view).classList.add("active");
+function setupNavigation() {
+  navItems.forEach((button) => {
+    button.addEventListener("click", () => {
+      navItems.forEach((item) => item.classList.remove("active"));
+      views.forEach((view) => view.classList.remove("active"));
+      button.classList.add("active");
+      document.getElementById(button.dataset.view).classList.add("active");
+    });
   });
-});
-
-function updateDashboard() {
-  const active = state.cards.filter((c) => c.status === "active").length;
-  const downloads = state.cards.reduce((sum, c) => sum + c.downloads, 0);
-  const soon = state.cards.filter((c) => new Date(c.expiresAt) <= new Date("2026-05-26")).length;
-
-  document.getElementById("activeCards").textContent = String(active);
-  document.getElementById("lastDownloads").textContent = String(downloads);
-  document.getElementById("expiringSoon").textContent = String(soon);
 }
 
-function getFormData() {
+function readForm(formId) {
+  const form = document.getElementById(formId);
   return Object.fromEntries(new FormData(form));
 }
 
-function updatePreview() {
-  const data = getFormData();
-  document.getElementById("previewName").textContent = data.customerName;
-  document.getElementById("previewCustomerNumber").textContent = data.customerNumber;
-  document.getElementById("previewPoints").textContent = data.points;
-  document.getElementById("previewStatus").textContent = data.status;
-  passPreview.style.background = data.backgroundColor;
-  passPreview.style.color = data.foregroundColor;
-  document.querySelectorAll(".label").forEach((label) => {
-    label.style.color = data.labelColor;
+function refreshUi() {
+  const data = getAllData();
+  fillDashboard(getDashboardStats());
+  renderCustomers(data.customers);
+  renderTemplateOptions(data.templates);
+  renderCustomerOptions(data.customers);
+
+  const selectedTemplateId = document.getElementById("templatePreviewSelect").value || data.templates[0]?.id;
+  const previewTemplate = data.templates.find((template) => template.id === selectedTemplateId) || data.templates[0];
+  const previewCustomer = data.customers[0];
+  updatePreview(previewTemplate, previewCustomer);
+}
+
+function setupForms() {
+  document.getElementById("customerForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    addCustomer(readForm("customerForm"));
+    event.target.reset();
+    refreshUi();
+  });
+
+  document.getElementById("templateForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    addTemplate(readForm("templateForm"));
+    event.target.reset();
+    refreshUi();
+  });
+
+  document.getElementById("issueForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    issuePass(readForm("issueForm"));
+    event.target.reset();
+    refreshUi();
+  });
+
+  document.getElementById("customersTableBody").addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement)) return;
+
+    const action = target.dataset.action;
+    const customerId = target.dataset.id;
+    if (!action || !customerId) return;
+
+    const amount = action === "plus" ? 10 : -10;
+    bookPoints(customerId, amount, `Manuelle Buchung (${amount > 0 ? "+" : ""}${amount})`);
+    refreshUi();
+  });
+
+  document.getElementById("templatePreviewSelect").addEventListener("change", () => {
+    const data = getAllData();
+    const templateId = document.getElementById("templatePreviewSelect").value;
+    const template = data.templates.find((entry) => entry.id === templateId) || data.templates[0];
+    updatePreview(template, data.customers[0]);
+  });
+
+  document.getElementById("exportJson").addEventListener("click", () => {
+    const data = getAllData();
+    const templateId = document.getElementById("templatePreviewSelect").value;
+    const template = data.templates.find((entry) => entry.id === templateId) || data.templates[0];
+    showPassJson(template, data.customers[0]);
+  });
+
+  document.getElementById("closeJson").addEventListener("click", () => {
+    document.getElementById("jsonDialog").close();
   });
 }
 
-form.addEventListener("input", updatePreview);
-
-document.getElementById("exportJson").addEventListener("click", () => {
-  const json = buildPassJson(getFormData());
-  document.getElementById("jsonOutput").textContent = JSON.stringify(json, null, 2);
-  document.getElementById("jsonDialog").showModal();
-});
-
-document.getElementById("closeJson").addEventListener("click", () => {
-  document.getElementById("jsonDialog").close();
-});
-
-updateDashboard();
-updatePreview();
+setupNavigation();
+setupForms();
+refreshUi();

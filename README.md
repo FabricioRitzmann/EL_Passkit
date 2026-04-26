@@ -2,15 +2,24 @@
 
 Apple-ähnlicher Wallet-Karten-Editor mit Supabase-orientierter Projektstruktur.
 
+## Neu in dieser Version
+
+- Kundenverwaltung mit Punkten und Status
+- Vorlagenverwaltung (Pass-Farben, Pass-Typ, Barcode-Typ)
+- Pass-Ausgabe mit Seriennummer und Ablaufdatum
+- Lokale Datenhaltung (LocalStorage) für schnellen MVP-Test
+- `pass.json`-Export für die aktuell gewählte Vorlage
+
 ## Struktur
 
-- `frontend/`: Dashboard, Editor, Live-Vorschau, pass.json-Export
-- `backend/supabase/migrations/database.sql`: Tabellen für Kunden, Templates, Passes, Geräte-Registrierungen
+- `frontend/`: Dashboard, Editor, Kundenverwaltung, Vorlagen, Pass-Ausgabe
+- `frontend/js/api.js`: einfache Daten-API für Kunden, Vorlagen, Pässe und Punktebuchungen
+- `frontend/js/ui.js`: Rendering-Funktionen für Dashboard, Tabellen und Selects
+- `backend/supabase/migrations/database.sql`: Basis-Tabellen
+- `backend/supabase/migrations/2026-04-26_promillo_extension.sql`: Punkte- und Event-Erweiterung
 - `backend/supabase/functions/*`: Edge-Function-Stubs für Pass-Lifecycle
 
 ## Lokal starten
-
-Da es ein statisches Frontend ist, reicht ein beliebiger Static-Server, z. B.:
 
 ```bash
 python3 -m http.server 4173 --directory frontend
