@@ -20,7 +20,7 @@
           <button class="nav-item active" data-view="dashboard">Dashboard</button>
           <button class="nav-item" data-view="editor">Pass-Vorschau</button>
           <button class="nav-item" data-view="customers">Kunden</button>
-          <button class="nav-item" data-view="operations">Vorlagen & Ausgabe</button>
+          <button class="nav-item" data-view="operations">Designer & Ausgabe</button>
         </nav>
       </aside>
 
@@ -28,7 +28,7 @@
         <header class="topbar glass">
           <div>
             <p class="eyebrow">Wallet Management</p>
-            <h2>Passkit-Plattform auf EL-Promillo-Logik</h2>
+            <h2>Vollständiger Passkit-Designer auf EL-Promillo-Logik</h2>
           </div>
         </header>
 
@@ -42,7 +42,7 @@
         </section>
 
         <section id="editor" class="view">
-          <div class="editor-grid">
+          <div class="editor-grid single">
             <aside class="preview-panel glass">
               <h3>Live-Vorschau</h3>
               <label>
@@ -51,7 +51,7 @@
               </label>
               <div class="pass-preview" id="passPreview">
                 <div class="pass-header">
-                  <p class="logo-text">EL Passkit</p>
+                  <p class="logo-text" id="previewLogoText">EL Passkit</p>
                   <span class="status-badge" id="previewStatus">Gold</span>
                 </div>
                 <div class="pass-main">
@@ -67,8 +67,16 @@
                       <p id="previewPoints">250</p>
                     </div>
                   </div>
+                  <p class="label">Kartentyp</p>
+                  <p id="previewTemplateType">storeCard</p>
+                  <p class="label">Primary Fields</p>
+                  <p id="previewPrimaryFields">-</p>
+                  <p class="label">Secondary Fields</p>
+                  <p id="previewSecondaryFields">-</p>
+                  <p class="label">Auxiliary Fields</p>
+                  <p id="previewAuxFields">-</p>
                 </div>
-                <div class="barcode">|||| |||| |||| ||||</div>
+                <div class="barcode" id="previewBarcode">|||| |||| |||| ||||</div>
               </div>
               <button id="exportJson" class="secondary-btn">pass.json anzeigen</button>
             </aside>
@@ -105,7 +113,7 @@
         <section id="operations" class="view">
           <div class="operations-grid">
             <form class="editor-panel glass" id="templateForm">
-              <h3>Vorlage erstellen</h3>
+              <h3>Pass Designer (Passkit Standard)</h3>
               <label>Name <input type="text" name="name" required /></label>
               <label>
                 Kartentyp
@@ -114,8 +122,10 @@
                   <option value="coupon">Gutschein</option>
                   <option value="eventTicket">Eventticket</option>
                   <option value="generic">Generisch</option>
+                  <option value="boardingPass">Boarding Pass</option>
                 </select>
               </label>
+              <label>Logo Text <input type="text" name="logoText" value="EL Passkit" /></label>
               <label>Hintergrundfarbe <input type="color" name="backgroundColor" value="#1e1e1e" /></label>
               <label>Textfarbe <input type="color" name="foregroundColor" value="#ffffff" /></label>
               <label>Label-Farbe <input type="color" name="labelColor" value="#b4b4b4" /></label>
@@ -125,9 +135,34 @@
                   <option value="PKBarcodeFormatQR">QR-Code</option>
                   <option value="PKBarcodeFormatCode128">Code128</option>
                   <option value="PKBarcodeFormatPDF417">PDF417</option>
+                  <option value="PKBarcodeFormatAztec">Aztec</option>
                 </select>
               </label>
-              <button class="primary-btn" type="submit">Vorlage speichern</button>
+              <label>Barcode Message <input type="text" name="barcodeMessage" value="EL-PASS" /></label>
+              <label class="checkbox-label"><input type="checkbox" name="suppressStripShine" /> suppressStripShine</label>
+              <label class="checkbox-label"><input type="checkbox" name="sharingProhibited" /> sharingProhibited</label>
+              <label>Primary Fields (JSON Array)
+                <textarea name="primaryFields">[{"key":"name","label":"Kunde","value":"{{fullName}}"}]</textarea>
+              </label>
+              <label>Secondary Fields (JSON Array)
+                <textarea name="secondaryFields">[{"key":"points","label":"Punkte","value":"{{points}}"}]</textarea>
+              </label>
+              <label>Auxiliary Fields (JSON Array)
+                <textarea name="auxiliaryFields">[{"key":"status","label":"Status","value":"{{status}}"}]</textarea>
+              </label>
+              <label>Back Fields (JSON Array)
+                <textarea name="backFields">[{"key":"contact","label":"Kontakt","value":"info@example.com"}]</textarea>
+              </label>
+              <label>Locations (JSON Array)
+                <textarea name="locations">[]</textarea>
+              </label>
+              <label>Beacons (JSON Array)
+                <textarea name="beacons">[]</textarea>
+              </label>
+              <div class="button-row">
+                <button class="primary-btn" type="submit">Vorlage speichern</button>
+                <button class="secondary-btn" type="button" id="downloadTemplateJson">Designer JSON exportieren</button>
+              </div>
             </form>
 
             <form class="editor-panel glass" id="issueForm">
@@ -149,6 +184,16 @@
               <label>Kontakt E-Mail <input type="email" name="contactEmail" value="info@example.com" required /></label>
               <button class="primary-btn" type="submit">Parameter speichern</button>
             </form>
+
+            <article class="glass simple-card full-span">
+              <h3>Ausgegebene Pässe</h3>
+              <table>
+                <thead>
+                  <tr><th>Serial</th><th>Kunde</th><th>Vorlage</th><th>Status</th><th>Ablauf</th></tr>
+                </thead>
+                <tbody id="passesTableBody"></tbody>
+              </table>
+            </article>
           </div>
         </section>
       </main>

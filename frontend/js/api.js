@@ -1,4 +1,4 @@
-import { getSupabaseClient } from "./supabaseClient.js";
+import { getSupabaseClient } from './supabaseClient.js';
 
 function mapCustomer(row) {
   return {
@@ -8,9 +8,19 @@ function mapCustomer(row) {
     email: row.email,
     customerNumber: row.customer_number,
     points: row.points ?? 0,
-    status: row.status ?? "Basic",
+    status: row.status ?? 'Basic',
     createdAt: row.created_at,
   };
+}
+
+function parseJson(value, fallback) {
+  if (!value) return fallback;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return fallback;
+  }
 }
 
 function mapTemplate(row) {
@@ -21,7 +31,17 @@ function mapTemplate(row) {
     backgroundColor: row.background_color,
     foregroundColor: row.foreground_color,
     labelColor: row.label_color,
-    barcodeFormat: row.barcode_format ?? "PKBarcodeFormatQR",
+    barcodeFormat: row.barcode_format ?? 'PKBarcodeFormatQR',
+    barcodeMessage: row.barcode_message ?? '',
+    logoText: row.logo_text ?? 'EL Passkit',
+    suppressStripShine: row.suppress_strip_shine ?? false,
+    sharingProhibited: row.sharing_prohibited ?? false,
+    primaryFields: parseJson(row.primary_fields, []),
+    secondaryFields: parseJson(row.secondary_fields, []),
+    auxiliaryFields: parseJson(row.auxiliary_fields, []),
+    backFields: parseJson(row.back_fields, []),
+    locations: parseJson(row.locations, []),
+    beacons: parseJson(row.beacons, []),
   };
 }
 
@@ -70,18 +90,18 @@ export async function getAllData() {
   const supabase = await getSupabaseClient();
   const passkitSettingsPromise = (async () => {
     try {
-      return await runQuery(supabase.from("passkit_settings").select("*").order("updated_at", { ascending: false }).limit(1));
+      return await runQuery(supabase.from('passkit_settings').select('*').order('updated_at', { ascending: false }).limit(1));
     } catch (error) {
-      if (error?.code === "42P01") return [];
+      if (error?.code === '42P01') return [];
       throw error;
     }
   })();
 
   const [customers, templates, passes, transactions, passkitSettingsRows] = await Promise.all([
-    runQuery(supabase.from("customers").select("*").order("created_at", { ascending: true })),
-    runQuery(supabase.from("wallet_templates").select("*").order("created_at", { ascending: true })),
-    runQuery(supabase.from("wallet_passes").select("*").order("created_at", { ascending: false })),
-    runQuery(supabase.from("point_transactions").select("*").order("created_at", { ascending: false })),
+    runQuery(supabase.from('customers').select('*').order('created_at', { ascending: true })),
+    runQuery(supabase.from('wallet_templates').select('*').order('created_at', { ascending: true })),
+    runQuery(supabase.from('wallet_passes').select('*').order('created_at', { ascending: false })),
+    runQuery(supabase.from('point_transactions').select('*').order('created_at', { ascending: false })),
     passkitSettingsPromise,
   ]);
 
@@ -94,18 +114,26 @@ export async function getAllData() {
   };
 }
 
+function toJson(value, fallback = []) {
+  try {
+    return JSON.stringify(value || fallback);
+  } catch (error) {
+    return JSON.stringify(fallback);
+  }
+}
+
 export async function addCustomer(payload) {
   const supabase = await getSupabaseClient();
   const [row] = await runQuery(
     supabase
-      .from("customers")
+      .from('customers')
       .insert({
         first_name: payload.firstName,
         last_name: payload.lastName,
         email: payload.email || null,
         customer_number: payload.customerNumber,
         points: Number(payload.points || 0),
-        status: payload.status || "Basic",
+        status: payload.status || 'Basic',
       })
       .select()
   );
@@ -117,7 +145,7 @@ export async function addTemplate(payload) {
   const supabase = await getSupabaseClient();
   const [row] = await runQuery(
     supabase
-      .from("wallet_templates")
+      .from('wallet_templates')
       .insert({
         name: payload.name,
         pass_type: payload.passType,
@@ -125,6 +153,16 @@ export async function addTemplate(payload) {
         foreground_color: payload.foregroundColor,
         label_color: payload.labelColor,
         barcode_format: payload.barcodeFormat,
+        barcode_message: payload.barcodeMessage || null,
+        logo_text: payload.logoText || 'EL Passkit',
+        suppress_strip_shine: payload.suppressStripShine === 'on',
+        sharing_prohibited: payload.sharingProhibited === 'on',
+        primary_fields: toJson(payload.primaryFields),
+        secondary_fields: toJson(payload.secondaryFields),
+        auxiliary_fields: toJson(payload.auxiliaryFields),
+        back_fields: toJson(payload.backFields),
+        locations: toJson(payload.locations),
+        beacons: toJson(payload.beacons),
       })
       .select()
   );
@@ -136,13 +174,13 @@ export async function issuePass(payload) {
   const supabase = await getSupabaseClient();
   const [row] = await runQuery(
     supabase
-      .from("wallet_passes")
+      .from('wallet_passes')
       .insert({
         customer_id: payload.customerId,
         template_id: payload.templateId,
         serial_number: payload.serialNumber,
-        pass_type_identifier: payload.passTypeIdentifier || "pass.el.promillo",
-        status: "active",
+        pass_type_identifier: payload.passTypeIdentifier || 'pass.el.promillo',
+        status: 'active',
         barcode_value: payload.serialNumber,
         expires_at: payload.expiresAt || null,
       })
@@ -156,12 +194,10 @@ export async function upsertPasskitSettings(payload) {
   const supabase = await getSupabaseClient();
   let existingRows = [];
   try {
-    existingRows = await runQuery(supabase.from("passkit_settings").select("id").order("updated_at", { ascending: false }).limit(1));
+    existingRows = await runQuery(supabase.from('passkit_settings').select('id').order('updated_at', { ascending: false }).limit(1));
   } catch (error) {
-    if (error?.code === "42P01") {
-      throw new Error(
-        "Die Tabelle passkit_settings fehlt. Bitte zuerst die Migration backend/supabase/migrations/2026-04-26_passkit_settings.sql ausführen."
-      );
+    if (error?.code === '42P01') {
+      throw new Error('Die Tabelle passkit_settings fehlt. Bitte zuerst die Migration backend/supabase/migrations/2026-04-26_passkit_settings.sql ausführen.');
     }
     throw error;
   }
@@ -177,8 +213,8 @@ export async function upsertPasskitSettings(payload) {
   };
 
   const [row] = existing
-    ? await runQuery(supabase.from("passkit_settings").update(writePayload).eq("id", existing.id).select())
-    : await runQuery(supabase.from("passkit_settings").insert(writePayload).select());
+    ? await runQuery(supabase.from('passkit_settings').update(writePayload).eq('id', existing.id).select())
+    : await runQuery(supabase.from('passkit_settings').insert(writePayload).select());
 
   return mapPasskitSettings(row);
 }
@@ -187,19 +223,19 @@ export async function bookPoints(customerId, amount, reason) {
   const supabase = await getSupabaseClient();
 
   await runQuery(
-    supabase.from("point_transactions").insert({
+    supabase.from('point_transactions').insert({
       customer_id: customerId,
       amount,
       reason,
     })
   );
 
-  const [customer] = await runQuery(supabase.from("customers").select("*").eq("id", customerId).limit(1));
+  const [customer] = await runQuery(supabase.from('customers').select('*').eq('id', customerId).limit(1));
   return customer ? mapCustomer(customer) : null;
 }
 
 export function getDashboardStats(data) {
-  const activeCards = data.passes.filter((pass) => pass.status === "active").length;
+  const activeCards = data.passes.filter((pass) => pass.status === 'active').length;
   const totalDownloads = data.passes.reduce((sum, pass) => sum + pass.downloads, 0);
   const expiringSoon = data.passes.filter((pass) => {
     if (!pass.expiresAt) return false;
