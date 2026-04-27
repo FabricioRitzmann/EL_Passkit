@@ -1,39 +1,35 @@
-# EL Passkit MVP
+# EL Passkit MVP (Designer Edition)
 
-Apple-ähnlicher Wallet-Karten-Editor mit Supabase-orientierter Projektstruktur.
+Apple-Wallet-orientierter Karten-Designer mit Supabase-Backend, EL-Promillo-Logik (Punkte/Status) und pass.json-Export.
 
-## Neu in dieser Version
+## Was jetzt enthalten ist
 
-- Kundenverwaltung mit Punkten und Status
-- Vorlagenverwaltung (Pass-Farben, Pass-Typ, Barcode-Typ)
-- Pass-Ausgabe mit Seriennummer und Ablaufdatum
-- Globale Passkit-Parameter (Pass Type Identifier, Team Identifier etc.) direkt im Frontend bearbeitbar
-- Supabase-gestützte Datenhaltung (Kunden, Vorlagen, Pässe, Punkte)
-- `pass.json`-Export für die aktuell gewählte Vorlage
+- Vollständiger Pass-Designer für `storeCard`, `coupon`, `eventTicket`, `generic`, `boardingPass`
+- Felder pro Passkit-Sektion (`primary`, `secondary`, `auxiliary`, `back`) als JSON-Arrays
+- Erweiterte Pass-Optionen (`barcodeMessage`, `suppressStripShine`, `sharingProhibited`, `locations`, `beacons`)
+- Live-Vorschau mit Kunden-/Template-Kombination
+- Ausgabe von Pässen inkl. Seriennummer/Ablaufdatum
+- Übersicht ausgegebener Pässe
+- Zentrale Passkit-Parameter (`passTypeIdentifier`, `teamIdentifier`, Organisation etc.)
 
-## Struktur
+## Projektstruktur
 
-- `frontend/`: Dashboard, Editor, Kundenverwaltung, Vorlagen, Pass-Ausgabe
-- `frontend/js/api.js`: einfache Daten-API für Kunden, Vorlagen, Pässe und Punktebuchungen
-- `frontend/js/ui.js`: Rendering-Funktionen für Dashboard, Tabellen und Selects
-- `backend/supabase/migrations/database.sql`: Basis-Tabellen
-- `backend/supabase/migrations/2026-04-26_promillo_extension.sql`: Punkte- und Event-Erweiterung
-- `backend/supabase/functions/*`: Edge-Function-Stubs für Pass-Lifecycle
-- `backend/supabase/migrations/2026-04-26_storage_and_rls.sql`: Buckets + RLS Policies für Frontend-Zugriff
-- `backend/supabase/migrations/2026-04-26_passkit_settings.sql`: Tabelle + Policies für zentrale Passkit-Parameter
+- `frontend/`: UI und Designer
+- `frontend/js/app.js`: Orchestrierung, Form-Handling, Exporte
+- `frontend/js/ui.js`: Rendering + JSON-Parsing der Designer-Felder
+- `frontend/js/walletEditor.js`: pass.json-Build nach Passkit-Schema
+- `backend/supabase/migrations/`: SQL-Migrationen
 
-## Lokal starten
+## Schnellstart (morgen früh direkt nutzbar)
 
-```bash
-python3 -m http.server 4173 --directory frontend
-```
+1. **Supabase SQL ausführen (in dieser Reihenfolge):**
+   - `backend/supabase/migrations/database.sql`
+   - `backend/supabase/migrations/2026-04-26_promillo_extension.sql`
+   - `backend/supabase/migrations/2026-04-26_storage_and_rls.sql`
+   - `backend/supabase/migrations/2026-04-26_passkit_settings.sql`
+   - `backend/supabase/migrations/2026-04-26_designer_template_fields.sql`
 
-Dann öffnen: `http://localhost:4173`
-
-
-## Supabase Credentials (Frontend)
-
-Lege die Datei `frontend/supabase.credentials.json` mit folgenden Keys an:
+2. **Frontend Credentials anlegen:**
 
 ```json
 {
@@ -41,3 +37,28 @@ Lege die Datei `frontend/supabase.credentials.json` mit folgenden Keys an:
   "supabaseAnonKey": "<ANON_KEY>"
 }
 ```
+
+Datei: `frontend/supabase.credentials.json`
+
+3. **Lokal starten:**
+
+```bash
+python3 -m http.server 4173 --directory frontend
+```
+
+Dann: `http://localhost:4173`
+
+## GitHub / Deploy Vorbereitung (Checkliste)
+
+- Secrets für CI/CD vorbereiten:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY` (nur Server/CI, nie im Frontend)
+- Branch Protection aktivieren (mind. 1 Review + required checks)
+- Optional: GitHub Action ergänzen, die SQL-Migrationen gegen Staging validiert
+
+## Hinweise zu EL_Promillo-Anforderungen
+
+- Punkte-/Status-Logik ist über `customers` + `point_transactions` integriert.
+- Designer erlaubt Platzhalterwerte im JSON (`{{fullName}}`, `{{points}}`, `{{status}}`) als redaktionelle Vorlagenwerte.
+- Für echte `.pkpass`-Signierung müssen Zertifikate und die Edge-Functions (`backend/supabase/functions/*`) produktiv erweitert werden.
